@@ -20,3 +20,9 @@
 ## 글꼴
 
 - Galmuri 폰트는 저장소에 포함된 `OFL-GALMURI.md` 조건 아래 UI에 사용.
+
+## 공개 제작자 일러스트
+
+- 게임 잠금 뒤 `laika-base-v1`을 직접 참조해 라이카가 검은 종이에 빗물 둑을 접는 장면을 OpenAI 내장 `image_gen`으로 생성했다.
+- 원본은 `art/source/laika-foldtherain.png`, 재현용 지시는 `art/prompts/laika-foldtherain.md`, 해시와 검수 결과는 `art/provenance/laika-foldtherain.json`에 기록했다.
+- 웹 릴리스에는 640px와 1280px JPEG 파생본만 사용한다. 얼굴 무늬, 귀, 하네스, 주황 연결구, 네 발 골격, 생성 문자 부재와 모바일 크롭을 확인했다.

@@ -56,3 +56,9 @@
 - `npm run build`, `npm run viewport`, `SMOKE_MODE=deployment-only npm run smoke`, `npm run csp`: 모두 통과했다.
 - 실제 Chromium 포인터 검증: 경사진 둑을 드래그한 판에서 `folds=1`, `foldRoutes=11`; 별도 무입력 판에서 `roofRoutes=10`; page/console 오류 없음.
 - 배포 smoke sourceHash: `bd75f3103ab71ae52dde3ea0d2d6693f41d5c99f3be1e1a04ecb087cb66756d2`.
+
+## 공개 서사 / 2026-07-26
+
+- 잠긴 GDD와 제작 기록만 근거로 한·영 `WHY.md`, 공개 크레딧과 제작자 일러스트 메타데이터를 작성했다.
+- `laika-base-v1`을 직접 참조한 제작자 일러스트 원본과 640px, 1280px JPEG 파생본을 만들고 해시와 사람 검수 결과를 `ART.md`와 `art/provenance/`에 기록했다.
+- 게임 규칙, 세계, 팔레트, 게임 아트와 사운드는 바꾸지 않았다.

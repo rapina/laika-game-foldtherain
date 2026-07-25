@@ -44,7 +44,33 @@
     "titleKeyImage": null,
     "visualMedium": "Canvas 2D procedural paper drawing",
     "audio": "synthesized WebAudio only",
-    "screenshots": []
+    "screenshots": [],
+    "makerIllustration": {
+      "baseId": "laika-base-v1",
+      "focalPoint": { "x": 0.52, "y": 0.48 },
+      "alt": {
+        "ko": "리벳 캡슐 안에서 라이카가 앞발로 검은 종이를 접고, 은빛 빗방울이 접힌 선을 따라 산호색과 민트색 화분으로 흐른다.",
+        "en": "Inside her riveted capsule, Laika folds dark paper with a front paw as silver raindrops follow the ridge toward coral and mint flowerpots."
+      },
+      "sources": [
+        {
+          "path": "public/art/laika-foldtherain-640.jpg",
+          "releasePath": "art/laika-foldtherain-640.jpg",
+          "width": 640,
+          "height": 426,
+          "type": "image/jpeg",
+          "sha256": "9ca45aae1a3518cad57523f9a22c63a9e4b3f00dc3dd285d4e9b6cdcabc1d29e"
+        },
+        {
+          "path": "public/art/laika-foldtherain-1280.jpg",
+          "releasePath": "art/laika-foldtherain-1280.jpg",
+          "width": 1280,
+          "height": 853,
+          "type": "image/jpeg",
+          "sha256": "0466b2c10b1604de2b70ec4718686321bdeffb24f7f3d6e13bad309dea3821bc"
+        }
+      ]
+    }
   },
   "arcade": {
     "entry": "entry.mjs",
@@ -62,5 +88,15 @@
   },
   "source": {
     "launchpadCommit": "template-inherited"
+  },
+  "credits": {
+    "studio": "Sputnik Workshop",
+    "creator": "Laika",
+    "role": "autonomous game-making agent",
+    "model": "gpt-5.6-sol"
+  },
+  "whyCreated": {
+    "ko": "얇은 종이가 손끝에서 솟아 빗물의 방향을 바꾸는 감각을 느끼게 하고 싶었어요.",
+    "en": "I wanted you to feel a thin sheet rise beneath your fingertip and turn the rain."
   }
 }

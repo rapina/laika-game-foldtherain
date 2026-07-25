@@ -1,10 +1,10 @@
 {
   "schemaVersion": 3,
   "reviewedAt": "2026-07-26",
-  "sourceHash": "63b5560836ab4740727550f33c6cb34fe571bbd8b825320e7274b56e340fb60f",
+  "sourceHash": "8027f0ca810e2db6f41d97e78cac53239c5106eeb9c38bd2bc600ea4d9aa202b",
   "verdict": "blocked",
   "method": {
-    "build": "npm run build production output, exercised by npm run viewport and SMOKE_MODE=deployment-only npm run smoke",
+    "build": "Fresh npm run build production output, exercised with npm run viewport, SMOKE_MODE=deployment-only npm run smoke, and npm run csp",
     "viewport": {
       "width": 390,
       "height": 844
@@ -15,96 +15,109 @@
       "id": "portrait-canvas",
       "designClaim": "The game uses a 390×844 portrait Canvas 2D stage and uniformly letterboxes at 360×800 and 430×932.",
       "status": "implemented",
-      "observed": "The viewport run passed standalone and portal geometry at 360×800, 390×844, and 430×932 with a uniform design aspect, DPR backing store, no overflow, and no page or console errors."
+      "observed": "The fresh viewport run passed standalone and portal geometry at 360×800, 390×844, and 430×932 with the expected design aspect, DPR backing store, no overflow, and no page or console errors."
     },
     {
       "id": "fold-input-rules",
-      "designClaim": "Dragging empty space creates a fold, drags shorter than 42px are ignored, tapping a fold unfolds it, and folds crossing buildings or pots are rejected with shake feedback.",
+      "designClaim": "Dragging empty space creates a fold, drags shorter than 42px are ignored, tapping the middle of a fold unfolds it, and folds crossing buildings or pots are rejected with shake feedback.",
       "status": "implemented",
-      "observed": "The runtime applies the 42px threshold, midpoint-distance tap removal, building and pot collision rejection, and shake feedback; the creator's rule test for collision rejection passed."
+      "observed": "The production runtime applies the 42px threshold, accepts a tap at a fold midpoint, rejects segments crossing building and pot collision rectangles, and applies a short shake; the creator collision test passed."
     },
     {
       "id": "three-fold-limit",
       "designClaim": "At most three active folds remain; creating a fourth fades the oldest fold for 0.8 seconds before removal.",
       "status": "implemented",
-      "observed": "The runtime marks the oldest active fold with a 0.8-second fade when a fourth is added, and the creator test confirming only the oldest is selected passed."
+      "observed": "The runtime marks the oldest of three active folds with a 0.8-second fade when a fourth is added, then removes it after the fade. The creator test confirming selection of only the oldest fold passed."
     },
     {
-      "id": "rain-and-routing",
-      "designClaim": "Each night emits exactly 72 drops in a fixed night-specific column cycle, and drops route along roofs and folds toward the lower endpoint before falling again.",
+      "id": "rain-count-and-sequence",
+      "designClaim": "Each night emits exactly 72 drops using a fixed night-specific column cycle that repeats identically after a restart.",
       "status": "implemented",
-      "observed": "The production runtime fixes RAIN_PER_NIGHT at 72, cycles deterministic columns by emitted index and night, and implements fold and roof routing; the 72-drop creator test passed."
+      "observed": "The runtime fixes the count at 72 and chooses every emission column from its emission index and night index without random state. The creator's 72-drop test passed."
+    },
+    {
+      "id": "roof-and-fold-routing",
+      "designClaim": "A drop that hits a roof or fold flows toward that surface's lower endpoint and then falls again.",
+      "status": "missing",
+      "observed": "The production runtime has no rain-versus-roof collision or roof-routing path. Its fold collision path does run, but selects whichever fold endpoint is nearest to the collision point rather than the endpoint with the greater y coordinate, so an upward route is possible. No creator test covers roof routing or lower-end selection."
     },
     {
       "id": "pots-and-night-flow",
-      "designClaim": "Pots bloom at their configured requirement, ignore later drops, advance when all pots bloom, and automatically restart the same night otherwise.",
+      "designClaim": "Pots bloom at their configured requirement and ignore later drops; after rainfall all-bloom advances, while any unbloomed pot automatically restarts the same night.",
       "status": "implemented",
-      "observed": "The runtime blooms pots at the configured threshold, stops later accumulation, advances after all pots bloom, and otherwise calls startNight again for the same index. The separate night-eight requirement mismatch is recorded below."
+      "observed": "The runtime blooms at the configured threshold, skips already bloomed pots, advances after all pots bloom, and otherwise calls startNight with the current night index. The creator threshold test passed."
     },
     {
-      "id": "night-eight-water-requirement",
-      "designClaim": "Night 8 pots require 9 drops each.",
-      "status": "missing",
-      "observed": "startNight computes need as 5 + min(4, floor(index / 2)); for zero-based night index 7 this evaluates to 8, so night 8 requires 8 drops rather than the promised 9."
+      "id": "night-requirements",
+      "designClaim": "The eight nights use water requirements [5, 5, 6, 6, 7, 8, 8, 9], including 9 on night eight.",
+      "status": "implemented",
+      "observed": "The runtime now uses the explicit NIGHT_REQUIREMENTS array [5, 5, 6, 6, 7, 8, 8, 9], and the creator test asserts the complete schedule."
     },
     {
       "id": "chimney-steam",
       "designClaim": "Drops hitting chimneys become translucent steam for about 1.4 seconds without directly causing failure.",
       "status": "implemented",
-      "observed": "Chimney collisions remove the drop and create a steam particle with life 1.4; failure remains based on whether all pots bloom after rainfall settles."
+      "observed": "Chimney collision removes the drop and creates a rendered steam particle with life 1.4 seconds; success or restart remains determined by pot bloom state after the rain settles."
     },
     {
-      "id": "score-progress-display",
-      "designClaim": "The cumulative score awards 100 points per bloomed pot plus 20 points for unused fold capacity and is used in the progress display.",
-      "status": "missing",
-      "observed": "The runtime accumulates 100 points on bloom and adds unused-fold points only at final completion, but neither the canvas progress display nor the game shell displays the score during play."
+      "id": "score-and-hud",
+      "designClaim": "The cumulative score awards 100 points per bloomed pot and 20 points per unused fold slot on every successful night, and is always displayed at the upper right during play.",
+      "status": "implemented",
+      "observed": "The runtime adds 100 on each bloom, applies foldCapacityBonus when every night succeeds, preserves the cumulative score between nights, and draws localized SCORE/점수 text at the upper right. The creator bonus test passed."
     },
     {
       "id": "bilingual-rules",
       "designClaim": "Korean and English are selected by device language or ?lang= and provide the same rule information.",
       "status": "implemented",
-      "observed": "The canvas selects Korean or English from ?lang= or navigator.language and renders equivalent night, drag/tap, pot objective, completion, and restart text; both locales passed the viewport result-screen checks."
+      "observed": "The canvas selects Korean or English from ?lang= or navigator.language and renders equivalent night, score, input, pot objective, completion, and restart information. Both locales passed result-screen viewport checks."
     },
     {
       "id": "final-scene-restart",
-      "designClaim": "Completing night 8 shows the illuminated final garden and a restart input.",
-      "status": "missing",
-      "observed": "The runtime draws a bilingual final overlay and handles a canvas tap by starting night 1, but onGameOver simultaneously schedules the host shell to unmount the game and switch to the ranking screen after 800ms. A restart tap cannot persist as a restarted run."
+      "designClaim": "Completing night eight leaves an illuminated final garden visible and offers an input that restarts at night one without unmounting the game.",
+      "status": "implemented",
+      "observed": "The runtime renders the bilingual final overlay, keeps the GameScreen mounted after onGameOver, and handles the next canvas pointerdown by clearing completion, resetting score, and starting night index zero. The prior automatic ranking transition and dynamic GameScreen key are absent."
     },
     {
       "id": "procedural-media-audio",
-      "designClaim": "The presentation uses procedural Canvas shapes and paper texture, and first input unlocks synthesized rain, fold, drip, and bloom sounds.",
+      "designClaim": "The presentation uses procedural Canvas shapes and paper texture, and first input unlocks synthesized rain, paper-fold, pottery-water, and bloom sounds.",
       "status": "implemented",
-      "observed": "The runtime draws the city, paper lines, rain, pots, flowers, folds, and final scene directly on Canvas and creates WebAudio nodes for rain and the named interaction cues after pointer input."
+      "observed": "The game scene is drawn directly on Canvas with procedural paper lines, city, rain, pots, flowers, folds, and steam. Pointer input unlocks WebAudio and the runtime synthesizes continuous rain plus fold, drip, and bloom cues."
     }
   ],
   "creatorTests": [
     {
       "command": "npm test",
-      "covers": "Exactly 72 drops per night; building-crossing fold rejection and valid empty-space folds; oldest-fold selection on a fourth fold; blooming at the required count and ignoring later water; supporting record and locale parity contracts.",
+      "covers": "Exactly 72 drops; the complete per-night water schedule; building-crossing fold rejection and valid folds; oldest-fold selection; bloom threshold and post-bloom pass-through; unused-fold scoring; records and locale parity.",
       "status": "pass"
     },
     {
       "command": "npm run viewport",
-      "covers": "Portrait standalone and portal geometry, DPR backing store, overflow and runtime errors, plus Korean and English result-screen clipping.",
+      "covers": "Standalone and portal geometry at the creator's viewport matrix, DPR backing store, overflow and runtime errors, plus Korean and English final-screen clipping.",
       "status": "pass"
     },
     {
       "command": "SMOKE_MODE=deployment-only npm run smoke",
-      "covers": "Deployable page mount with no console or page errors and source-hash-bound smoke evidence.",
+      "covers": "Production page mount without console or page errors and source-hash-bound smoke evidence.",
+      "status": "pass"
+    },
+    {
+      "command": "npm run csp",
+      "covers": "Portal stylesheet and layout, CSP violations, runtime errors, and required release assets.",
       "status": "pass"
     }
   ],
   "deployable": {
     "status": "pass",
-    "observed": "npm run build completed successfully; dist/index.html and hashed assets were produced. Deployment-only smoke mounted without console or page errors, and the recorded source hash matches smoke-result.json."
+    "observed": "A fresh npm run build completed and produced dist/index.html plus hashed assets. Viewport, deployment-only smoke, and CSP portal checks all passed without runtime errors or missing required assets. smoke-result.json records the same sourceHash as this review."
   },
   "notes": [
-    "The verdict is blocked solely by concrete GDD/build mismatches; creator tests and deployment checks pass.",
-    "The creator test for waterPot validates threshold behavior for a supplied need value but does not validate the per-night need schedule, so it does not detect the night 8 mismatch."
+    "This is an independent re-review of HEAD 10e47f1e; the prior blocked verdict was not carried forward as the decision.",
+    "All three prior blocked reasons are repaired: night eight now requires 9 drops, cumulative scoring and the upper-right HUD are implemented, and the final garden remains mounted so its tap restarts night one.",
+    "The final verdict remains blocked only because the concrete core-loop promise for roof routing and lower-end fold routing is not implemented.",
+    "Fun, difficulty, originality, polish, and the creator's choice of test strategy were not evaluated."
   ],
   "summary": {
-    "ko": "프로덕션 빌드, 제작자 테스트 25개, 세로 뷰포트 및 배포 부팅은 통과했다. 그러나 8번째 밤의 필요 물이 문서의 9가 아니라 8이고, 진행 중 점수 표시가 없으며, 최종 장면의 재시작은 0.8초 뒤 랭킹 화면 전환으로 유지되지 않아 설계 일치 출고를 차단한다.",
-    "en": "The production build, all 25 creator tests, portrait viewport checks, and deployment boot pass. Release is blocked because night 8 requires 8 drops instead of the documented 9, no in-play score progress is displayed, and the final-scene restart cannot persist past the shell's ranking transition after 0.8 seconds."
+    "ko": "새 프로덕션 빌드와 제작자 테스트 27개, 세로 뷰포트, 배포 부팅 및 CSP 검사는 통과했고 이전의 세 차단 사유도 모두 보완됐다. 그러나 빗방울이 지붕을 따라 흐르는 처리가 없고 접는 선에서도 낮은 끝이 아니라 가까운 끝을 선택해, GDD의 핵심 물길 약속과 실제 빌드가 일치하지 않으므로 출고를 차단한다.",
+    "en": "The fresh production build, all 27 creator tests, portrait viewport checks, deployment boot, and CSP check pass, and all three previous blockers are repaired. Release remains blocked because drops do not route along roofs and fold collisions choose the nearest endpoint rather than the lower endpoint, so the actual build does not implement the GDD's core water-routing promise."
   }
 }

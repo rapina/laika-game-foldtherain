@@ -1,8 +1,8 @@
 {
   "schemaVersion": 3,
   "reviewedAt": "2026-07-26",
-  "sourceHash": "8027f0ca810e2db6f41d97e78cac53239c5106eeb9c38bd2bc600ea4d9aa202b",
-  "verdict": "blocked",
+  "sourceHash": "bd75f3103ab71ae52dde3ea0d2d6693f41d5c99f3be1e1a04ecb087cb66756d2",
+  "verdict": "pass",
   "method": {
     "build": "Fresh npm run build production output, exercised with npm run viewport, SMOKE_MODE=deployment-only npm run smoke, and npm run csp",
     "viewport": {
@@ -21,7 +21,7 @@
       "id": "fold-input-rules",
       "designClaim": "Dragging empty space creates a fold, drags shorter than 42px are ignored, tapping the middle of a fold unfolds it, and folds crossing buildings or pots are rejected with shake feedback.",
       "status": "implemented",
-      "observed": "The production runtime applies the 42px threshold, accepts a tap at a fold midpoint, rejects segments crossing building and pot collision rectangles, and applies a short shake; the creator collision test passed."
+      "observed": "The production runtime applies the 42px threshold, accepts a tap within 18px of a fold segment, rejects segments crossing building and pot collision rectangles, and applies a short shake; the creator collision test passed."
     },
     {
       "id": "three-fold-limit",
@@ -33,25 +33,25 @@
       "id": "rain-count-and-sequence",
       "designClaim": "Each night emits exactly 72 drops using a fixed night-specific column cycle that repeats identically after a restart.",
       "status": "implemented",
-      "observed": "The runtime fixes the count at 72 and chooses every emission column from its emission index and night index without random state. The creator's 72-drop test passed."
+      "observed": "The runtime fixes the count at 72 and chooses every emission column from its emission index and night index without random state. Restarting a night resets the emission index, and the creator's 72-drop test passed."
     },
     {
       "id": "roof-and-fold-routing",
-      "designClaim": "A drop that hits a roof or fold flows toward that surface's lower endpoint and then falls again.",
-      "status": "missing",
-      "observed": "The production runtime has no rain-versus-roof collision or roof-routing path. Its fold collision path does run, but selects whichever fold endpoint is nearest to the collision point rather than the endpoint with the greater y coordinate, so an upward route is possible. No creator test covers roof routing or lower-end selection."
+      "designClaim": "A drop that hits a roof or fold flows toward that surface's endpoint with the greater y coordinate, using the nearer endpoint only when the endpoint heights are equal, and then falls again.",
+      "status": "implemented",
+      "observed": "The production runtime intersects each drop's movement segment with both sloped roof faces and active folds, then routeAlongSurface selects the greater-y endpoint or the nearer endpoint on equal y and applies a downward route velocity while gravity continues. Creator tests passed for a falling-drop roof intersection and for lower-end selection in both slope directions."
     },
     {
       "id": "pots-and-night-flow",
       "designClaim": "Pots bloom at their configured requirement and ignore later drops; after rainfall all-bloom advances, while any unbloomed pot automatically restarts the same night.",
       "status": "implemented",
-      "observed": "The runtime blooms at the configured threshold, skips already bloomed pots, advances after all pots bloom, and otherwise calls startNight with the current night index. The creator threshold test passed."
+      "observed": "The runtime blooms at the configured threshold, skips already bloomed pots, advances after all pots bloom, and otherwise calls startNight with the current night index. The creator threshold and post-bloom test passed."
     },
     {
       "id": "night-requirements",
       "designClaim": "The eight nights use water requirements [5, 5, 6, 6, 7, 8, 8, 9], including 9 on night eight.",
       "status": "implemented",
-      "observed": "The runtime now uses the explicit NIGHT_REQUIREMENTS array [5, 5, 6, 6, 7, 8, 8, 9], and the creator test asserts the complete schedule."
+      "observed": "The runtime uses the explicit NIGHT_REQUIREMENTS array [5, 5, 6, 6, 7, 8, 8, 9], and the creator test asserts the complete schedule."
     },
     {
       "id": "chimney-steam",
@@ -63,19 +63,19 @@
       "id": "score-and-hud",
       "designClaim": "The cumulative score awards 100 points per bloomed pot and 20 points per unused fold slot on every successful night, and is always displayed at the upper right during play.",
       "status": "implemented",
-      "observed": "The runtime adds 100 on each bloom, applies foldCapacityBonus when every night succeeds, preserves the cumulative score between nights, and draws localized SCORE/점수 text at the upper right. The creator bonus test passed."
+      "observed": "The runtime adds 100 on each bloom, applies foldCapacityBonus after every successful night, preserves the cumulative score between nights, and draws localized SCORE/점수 text at the upper right. The creator bonus test passed."
     },
     {
       "id": "bilingual-rules",
       "designClaim": "Korean and English are selected by device language or ?lang= and provide the same rule information.",
       "status": "implemented",
-      "observed": "The canvas selects Korean or English from ?lang= or navigator.language and renders equivalent night, score, input, pot objective, completion, and restart information. Both locales passed result-screen viewport checks."
+      "observed": "The canvas selects Korean or English from ?lang= or navigator.language and renders equivalent night, score, input, pot objective, completion, and restart information. Both locales passed final-screen viewport checks."
     },
     {
       "id": "final-scene-restart",
       "designClaim": "Completing night eight leaves an illuminated final garden visible and offers an input that restarts at night one without unmounting the game.",
       "status": "implemented",
-      "observed": "The runtime renders the bilingual final overlay, keeps the GameScreen mounted after onGameOver, and handles the next canvas pointerdown by clearing completion, resetting score, and starting night index zero. The prior automatic ranking transition and dynamic GameScreen key are absent."
+      "observed": "The runtime renders the bilingual final overlay, keeps the GameScreen mounted after onGameOver, and handles the next canvas pointerdown by clearing completion, resetting score, and starting night index zero. The final-screen UI fits in Korean and English at the tested portrait viewport."
     },
     {
       "id": "procedural-media-audio",
@@ -87,7 +87,7 @@
   "creatorTests": [
     {
       "command": "npm test",
-      "covers": "Exactly 72 drops; the complete per-night water schedule; building-crossing fold rejection and valid folds; oldest-fold selection; bloom threshold and post-bloom pass-through; unused-fold scoring; records and locale parity.",
+      "covers": "Exactly 72 drops; the complete per-night water schedule; building-crossing fold rejection and valid folds; oldest-fold selection; bloom threshold and post-bloom pass-through; unused-fold scoring; roof intersection and lower-end surface routing; records and locale parity.",
       "status": "pass"
     },
     {
@@ -108,16 +108,17 @@
   ],
   "deployable": {
     "status": "pass",
-    "observed": "A fresh npm run build completed and produced dist/index.html plus hashed assets. Viewport, deployment-only smoke, and CSP portal checks all passed without runtime errors or missing required assets. smoke-result.json records the same sourceHash as this review."
+    "observed": "A fresh npm run build completed and produced dist/index.html plus hashed assets. Viewport, deployment-only smoke, and CSP portal checks all passed without runtime errors or missing required assets. smoke-result.json and the fresh smoke output record the same sourceHash as this review."
   },
   "notes": [
-    "This is an independent re-review of HEAD 10e47f1e; the prior blocked verdict was not carried forward as the decision.",
-    "All three prior blocked reasons are repaired: night eight now requires 9 drops, cumulative scoring and the upper-right HUD are implemented, and the final garden remains mounted so its tap restarts night one.",
-    "The final verdict remains blocked only because the concrete core-loop promise for roof routing and lower-end fold routing is not implemented.",
+    "This is an independent re-review of HEAD f7736840; the earlier blocked verdicts were treated as prior evidence rather than carried forward as the decision.",
+    "The first review's three blockers remain repaired: night eight requires 9 drops, cumulative scoring and the upper-right HUD are implemented, and the final garden remains mounted so its tap restarts night one.",
+    "The second review's blocker is repaired: the production runtime now detects sloped roof collisions and routes both roof and fold hits toward the lower endpoint; creator tests cover roof intersection and lower-end selection.",
+    "All 29 creator tests, the fresh production build, portrait viewport checks, deployment-only smoke, and CSP portal verification passed.",
     "Fun, difficulty, originality, polish, and the creator's choice of test strategy were not evaluated."
   ],
   "summary": {
-    "ko": "새 프로덕션 빌드와 제작자 테스트 27개, 세로 뷰포트, 배포 부팅 및 CSP 검사는 통과했고 이전의 세 차단 사유도 모두 보완됐다. 그러나 빗방울이 지붕을 따라 흐르는 처리가 없고 접는 선에서도 낮은 끝이 아니라 가까운 끝을 선택해, GDD의 핵심 물길 약속과 실제 빌드가 일치하지 않으므로 출고를 차단한다.",
-    "en": "The fresh production build, all 27 creator tests, portrait viewport checks, deployment boot, and CSP check pass, and all three previous blockers are repaired. Release remains blocked because drops do not route along roofs and fold collisions choose the nearest endpoint rather than the lower endpoint, so the actual build does not implement the GDD's core water-routing promise."
+    "ko": "최종 GDD와 새 프로덕션 빌드가 일치한다. 이전 1차 검토의 밤 8 필요량·점수 HUD·최종 장면 재시작 문제와 2차 검토의 지붕 및 낮은 끝 물길 문제가 모두 보완됐으며, 제작자 테스트 29개와 빌드·세로 뷰포트·배포 부팅·CSP 검사가 통과해 출고 가능하다.",
+    "en": "The final GDD matches the fresh production build. The first review's night-eight requirement, score HUD, and final-scene restart issues and the second review's roof and lower-end routing issue are all repaired; all 29 creator tests plus build, portrait viewport, deployment boot, and CSP checks pass, so the game is deployable."
   }
 }

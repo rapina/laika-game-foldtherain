@@ -29,17 +29,17 @@
 
 /* ======= Theme Tokens — restyle per game ======= */
 :root {
-    --bg: #0c1824;
-    --bg-deep: #060e18;
-    --panel: #121e2e;
-    --panel-light: #1a2a3c;
-    --border-line: #1e3048;
-    --accent: #d4a830;
-    --accent-dim: rgba(212, 168, 48, 0.15);
-    --danger: #ff4438;
-    --text: #d0d8e0;
-    --text-dim: #7a8a9a;
-    --radius: 6px;
+    --bg: #101a36;
+    --bg-deep: #071020;
+    --panel: #172443;
+    --panel-light: #213154;
+    --border-line: #445676;
+    --accent: #71d8b0;
+    --accent-dim: rgba(113, 216, 176, 0.15);
+    --danger: #ff806f;
+    --text: #dbe7ec;
+    --text-dim: #8799b3;
+    --radius: 2px;
 }
 
 html, body, #root {
@@ -150,15 +150,18 @@ html, body, #root {
 
 .title-screen {
     justify-content: center;
-    gap: 48px;
+    gap: 72px;
+    background:
+        repeating-linear-gradient(2deg, rgba(255,255,255,.025) 0 1px, transparent 1px 7px),
+        linear-gradient(#17274c 0 26%, #101a36 48%);
 }
 .title-logo {
     text-align: center;
 }
 .title-logo h1 {
     font-family: 'Galmuri14', monospace;
-    font-size: 34px;
-    letter-spacing: 2px;
+    font-size: 29px;
+    letter-spacing: 1px;
     color: var(--accent);
 }
 .title-tagline {
@@ -204,7 +207,8 @@ html, body, #root {
     right: 10px;
     font-size: 11px;
     padding: 6px 12px;
-    opacity: 0.75;
+    opacity: 0.42;
+    z-index: 5;
 }
 
 /* ======= Ranking ======= */

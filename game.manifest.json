@@ -1,37 +1,37 @@
 {
   "schemaVersion": 1,
-  "slug": "gametemplate",
-  "appId": "com.example.gametemplate",
+  "slug": "foldtherain",
+  "appId": "com.sputnikworkshop.foldtherain",
   "version": "0.0.1",
-  "releaseDate": "TODO-YYYY-MM-DD",
+  "releaseDate": "2026-07-26",
   "title": {
-    "ko": "게임 템플릿",
-    "en": "Game Template"
+    "ko": "비를 접는 밤",
+    "en": "Fold the Rain"
   },
   "tagline": {
-    "ko": "TODO 한 줄 소개",
-    "en": "TODO one line pitch"
+    "ko": "종이 도시의 비를 접어 잠든 옥상 정원을 깨운다.",
+    "en": "Fold the rain across a paper city and wake its rooftop gardens."
   },
   "description": {
-    "ko": "TODO 규칙과 목표, 실패 조건을 중립 문체로 적는다.",
-    "en": "TODO describe the rules, the goal, and the failure condition in neutral prose."
+    "ko": "빈 공간에 최대 세 개의 접는 둑을 그어 고정된 빗물을 모든 화분으로 보낸다. 비가 그친 뒤 피지 않은 화분이 있으면 같은 밤이 다시 시작된다.",
+    "en": "Draw up to three folded banks in empty space to route a fixed rainfall to every pot. If any pot remains asleep when the rain stops, the night restarts."
   },
   "controls": {
     "ko": {
-      "primary": "TODO 주 입력이 무엇을 하는지",
-      "keyboard": "TODO 키보드 대체 입력",
-      "restart": "결과 화면을 눌러 다시 시작한다."
+      "primary": "빈 공간을 드래그해 접는 선을 만들고, 선을 탭해 펼친다.",
+      "keyboard": "키보드 입력은 사용하지 않는다.",
+      "restart": "마지막 장면을 눌러 첫째 밤부터 다시 시작한다."
     },
     "en": {
-      "primary": "TODO what the primary input does",
-      "keyboard": "TODO keyboard alternative",
-      "restart": "Tap the result screen to start again."
+      "primary": "Drag through empty space to make a fold; tap a fold to unfold it.",
+      "keyboard": "No keyboard input is used.",
+      "restart": "Tap the final scene to return to the first night."
     }
   },
   "session": {
-    "typicalSeconds": 90,
-    "maxSeconds": 180,
-    "failureBudget": 3
+    "typicalSeconds": 300,
+    "maxSeconds": 600,
+    "failureBudget": 0
   },
   "display": {
     "designWidth": 390,
@@ -41,14 +41,14 @@
   },
   "supportedLocales": ["ko", "en"],
   "media": {
-    "titleKeyImage": "public/art/title-key.jpg",
-    "visualMedium": "TODO 시각 매체",
-    "audio": "synthesized WebAudio only, no audio files",
+    "titleKeyImage": null,
+    "visualMedium": "Canvas 2D procedural paper drawing",
+    "audio": "synthesized WebAudio only",
     "screenshots": []
   },
   "arcade": {
     "entry": "entry.mjs",
-    "capabilities": ["pointer", "keyboard"],
+    "capabilities": ["pointer", "audio"],
     "viewport": {
       "width": 390,
       "height": 844,
@@ -61,6 +61,6 @@
     ]
   },
   "source": {
-    "launchpadCommit": "TODO-launchpad-sha"
+    "launchpadCommit": "template-inherited"
   }
 }

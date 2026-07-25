@@ -7,10 +7,10 @@ export type Locale = 'ko' | 'en' | 'zh' | 'ja'
  */
 export const translations: Record<Locale, Record<string, string>> = {
     ko: {
-        'title.name': 'GAME TEMPLATE',
-        'title.tagline': '새 게임을 시작하세요',
-        'title.play': '시작',
-        'title.ranking': '랭킹',
+        'title.name': '비를 접는 밤',
+        'title.tagline': '종이 도시의 빗길을 접어 주세요',
+        'title.play': '첫째 밤',
+        'title.ranking': '기록',
         'game.exit': '나가기',
         'ranking.title': '랭킹',
         'ranking.best': '최고 기록!',
@@ -21,10 +21,10 @@ export const translations: Record<Locale, Record<string, string>> = {
         'error.leaderboard': '리더보드를 열 수 없습니다.',
     },
     en: {
-        'title.name': 'GAME TEMPLATE',
-        'title.tagline': 'Start your new game',
-        'title.play': 'PLAY',
-        'title.ranking': 'RANKING',
+        'title.name': 'FOLD THE RAIN',
+        'title.tagline': 'Fold waterways through a paper city',
+        'title.play': 'FIRST NIGHT',
+        'title.ranking': 'RECORDS',
         'game.exit': 'EXIT',
         'ranking.title': 'RANKING',
         'ranking.best': 'NEW BEST!',
@@ -35,7 +35,7 @@ export const translations: Record<Locale, Record<string, string>> = {
         'error.leaderboard': 'Could not open the leaderboard.',
     },
     zh: {
-        'title.name': 'GAME TEMPLATE',
+        'title.name': 'FOLD THE RAIN',
         'title.tagline': '开始你的新游戏',
         'title.play': '开始',
         'title.ranking': '排行榜',
@@ -49,7 +49,7 @@ export const translations: Record<Locale, Record<string, string>> = {
         'error.leaderboard': '无法打开排行榜。',
     },
     ja: {
-        'title.name': 'GAME TEMPLATE',
+        'title.name': 'FOLD THE RAIN',
         'title.tagline': '新しいゲームを始めよう',
         'title.play': 'スタート',
         'title.ranking': 'ランキング',

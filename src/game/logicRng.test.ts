@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { setLogicRandomSeed, logicRandom, getLogicRandomCallCount } from './logicRng'
-import { RAIN_PER_NIGHT, NIGHT_REQUIREMENTS, addFold, foldCapacityBonus, segmentHitsBlock, waterPot } from './SampleGame'
+import { RAIN_PER_NIGHT, NIGHT_REQUIREMENTS, addFold, foldCapacityBonus, routeAlongSurface, segmentHitsBlock, segmentIntersection, waterPot } from './SampleGame'
 
 function drawSequence(n: number): number[] {
     return Array.from({ length: n }, () => logicRandom())
@@ -83,5 +83,24 @@ describe('Fold the Rain rules', () => {
         expect(foldCapacityBonus(0)).toBe(60)
         expect(foldCapacityBonus(2)).toBe(20)
         expect(foldCapacityBonus(3)).toBe(0)
+    })
+
+    it('detects a falling drop crossing a sloped roof surface', () => {
+        const hit = segmentIntersection(
+            { x: 70, y: 450 }, { x: 70, y: 580 },
+            { x: 38, y: 563 }, { x: 103, y: 537 },
+        )
+        expect(hit?.x).toBeCloseTo(70)
+        expect(hit?.y).toBeCloseTo(550.2)
+    })
+
+    it('routes roof and fold collisions toward the endpoint with greater y', () => {
+        const hit = { x: 160, y: 340 }
+        const route = routeAlongSurface(hit, { x: 90, y: 280 }, { x: 260, y: 410 })
+        expect(route.target).toEqual({ x: 260, y: 410 })
+        expect(route.vy).toBeGreaterThan(0)
+        const reversed = routeAlongSurface(hit, { x: 90, y: 430 }, { x: 260, y: 290 })
+        expect(reversed.target).toEqual({ x: 90, y: 430 })
+        expect(reversed.vy).toBeGreaterThan(0)
     })
 })

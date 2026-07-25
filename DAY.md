@@ -47,3 +47,12 @@
 - `npm run viewport`: 모든 standalone/portal 기하 조합과 한·영 결과 화면 통과. `verification/viewport-result.json`을 새 sourceHash로 갱신했다.
 - `SMOKE_MODE=deployment-only npm run smoke`: mounted=true, consoleErrors=[], pageErrors=[]; `smoke-result.json` 갱신.
 - `npm run csp`: stylesheet, layout, CSP violation, 오류, 필수 자산 검사를 모두 통과했다.
+
+## 빗물 경로 설계 보정 / 2026-07-26
+
+- 지붕과 접는 둑의 공식 경로를 “충돌한 면의 더 큰 y좌표 끝으로 흐른 뒤 재낙하”로 확정했다. 양 끝의 y좌표가 같을 때만 충돌점에서 가까운 끝을 사용한다.
+- 낙하 이동 선분과 지붕 양쪽 빗면의 실제 교차를 검출하고, 접는 둑과 동일한 낮은 끝 경로 함수를 적용했다.
+- `npm test`: 3개 파일, 29개 테스트 통과. 지붕 빗면 교차와 양방향 선의 낮은 끝 선택을 추가로 확인했다.
+- `npm run build`, `npm run viewport`, `SMOKE_MODE=deployment-only npm run smoke`, `npm run csp`: 모두 통과했다.
+- 실제 Chromium 포인터 검증: 경사진 둑을 드래그한 판에서 `folds=1`, `foldRoutes=11`; 별도 무입력 판에서 `roofRoutes=10`; page/console 오류 없음.
+- 배포 smoke sourceHash: `bd75f3103ab71ae52dde3ea0d2d6693f41d5c99f3be1e1a04ecb087cb66756d2`.

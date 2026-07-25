@@ -34,8 +34,20 @@ export function waterPot(pot:Pot):Pot {
 export function foldCapacityBonus(activeFolds:number):number {
     return Math.max(0, 3-activeFolds)*20
 }
+export function segmentIntersection(a:Point,b:Point,c:Point,d:Point):Point|null {
+    const den=(b.x-a.x)*(d.y-c.y)-(b.y-a.y)*(d.x-c.x)
+    if(Math.abs(den)<.0001)return null
+    const t=((c.x-a.x)*(d.y-c.y)-(c.y-a.y)*(d.x-c.x))/den
+    const u=((c.x-a.x)*(b.y-a.y)-(c.y-a.y)*(b.x-a.x))/den
+    return t>=0&&t<=1&&u>=0&&u<=1?{x:a.x+t*(b.x-a.x),y:a.y+t*(b.y-a.y)}:null
+}
+export function routeAlongSurface(hit:Point,a:Point,b:Point):{target:Point;vx:number;vy:number} {
+    const target=a.y>b.y?a:b.y>a.y?b:Math.hypot(hit.x-a.x,hit.y-a.y)<=Math.hypot(hit.x-b.x,hit.y-b.y)?a:b
+    const dx=target.x-hit.x,dy=target.y-hit.y,length=Math.max(1,Math.hypot(dx,dy)),speed=155
+    return {target,vx:dx/length*speed,vy:dy/length*speed}
+}
 
-type Drop={x:number;y:number;px:number;py:number;vx:number;vy:number;age:number;routed:boolean}
+type Drop={x:number;y:number;px:number;py:number;vx:number;vy:number;age:number;routed:number}
 type Steam={x:number;y:number;life:number}
 const nights=[
  {pots:[95],roofs:[[38,555,130,22]],chimneys:[]},
@@ -64,6 +76,7 @@ export class SampleGame implements GameRuntime {
  private ro:ResizeObserver|null=null;private raf=0;private last=0;private night=0;private drops:Drop[]=[];private pots:Pot[]=[]
  private folds:Fold[]=[];private steam:Steam[]=[];private emitted=0;private emitClock=0;private settle=0;private shake=0
  private message=0;private score=0;private over=false;private complete=false;private pointer:Point|null=null;private hover:Point|null=null
+ private roofRoutes=0;private foldRoutes=0
  private audio=new RainAudio();private locale='en'
 
  async mount(container:HTMLElement,callbacks:GameCallbacks):Promise<void>{
@@ -78,7 +91,7 @@ export class SampleGame implements GameRuntime {
   this.last=performance.now();this.raf=requestAnimationFrame(this.loop)
  }
  private startNight(index:number){this.night=index;const cfg=nights[index],need=NIGHT_REQUIREMENTS[index]
-  this.pots=cfg.pots.map((x,i)=>({x,y:cfg.roofs[i][1]-13,need,water:0,bloomed:false}));this.drops=[];this.folds=[];this.steam=[];this.emitted=0;this.emitClock=0;this.settle=0;this.message=1.7}
+  this.pots=cfg.pots.map((x,i)=>({x,y:cfg.roofs[i][1]-13,need,water:0,bloomed:false}));this.drops=[];this.folds=[];this.steam=[];this.emitted=0;this.emitClock=0;this.settle=0;this.message=1.7;this.roofRoutes=0;this.foldRoutes=0}
  private pos(e:PointerEvent):Point{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
  private down=(e:PointerEvent)=>{this.audio.unlock();if(this.complete){this.complete=false;this.over=false;this.score=0;this.startNight(0);return}
   this.canvas.setPointerCapture(e.pointerId);const p=this.pos(e),hit=this.folds.findIndex(f=>this.dist(p,f.a,f.b)<18&&!f.fading)
@@ -92,13 +105,15 @@ export class SampleGame implements GameRuntime {
  private dist(p:Point,a:Point,b:Point){const l=(b.x-a.x)**2+(b.y-a.y)**2,t=Math.max(0,Math.min(1,((p.x-a.x)*(b.x-a.x)+(p.y-a.y)*(b.y-a.y))/l));return Math.hypot(p.x-a.x-t*(b.x-a.x),p.y-a.y-t*(b.y-a.y))}
  private loop=(now:number)=>{const dt=Math.min(.034,(now-this.last)/1000);this.last=now;this.update(dt);this.draw();this.raf=requestAnimationFrame(this.loop)}
  private update(dt:number){if(this.over)return;this.message-=dt;this.shake-=dt;this.folds.forEach(f=>{if(f.fading)f.fading-=dt});this.folds=this.folds.filter(f=>f.fading===undefined||f.fading>0)
-  if(this.emitted<RAIN_PER_NIGHT){this.emitClock+=dt;while(this.emitClock>.19&&this.emitted<RAIN_PER_NIGHT){this.emitClock-=.19;const cols=[34,78,122,166,210,254,298,342],x=cols[(this.emitted*5+this.night*3)%cols.length];this.drops.push({x,y:139,px:x,py:139,vx:0,vy:155,age:0,routed:false});this.emitted++}}
+  if(this.emitted<RAIN_PER_NIGHT){this.emitClock+=dt;while(this.emitClock>.19&&this.emitted<RAIN_PER_NIGHT){this.emitClock-=.19;const cols=[34,78,122,166,210,254,298,342],x=cols[(this.emitted*5+this.night*3)%cols.length];this.drops.push({x,y:139,px:x,py:139,vx:0,vy:155,age:0,routed:0});this.emitted++}}
   const cfg=nights[this.night]
-  for(const d of this.drops){d.px=d.x;d.py=d.y;d.age+=dt;d.vy+=210*dt;d.x+=d.vx*dt;d.y+=d.vy*dt
-   for(const f of this.folds){if(f.fading||d.routed)continue;const lo=Math.min(f.a.x,f.b.x)-3,hi=Math.max(f.a.x,f.b.x)+3;if(d.x>=lo&&d.x<=hi){const t=(d.x-f.a.x)/(f.b.x-f.a.x||.001),fy=f.a.y+(f.b.y-f.a.y)*t;if(d.py<=fy&&d.y>=fy){const target=Math.hypot(d.x-f.a.x,d.y-f.a.y)<Math.hypot(d.x-f.b.x,d.y-f.b.y)?f.a:f.b;d.vx=(target.x-d.x)*4.2;d.vy=28;d.y=fy-2;d.routed=true}}}
+  for(const d of this.drops){d.px=d.x;d.py=d.y;d.age+=dt;d.routed=Math.max(0,d.routed-dt);d.vy+=210*dt;d.x+=d.vx*dt;d.y+=d.vy*dt
+   if(!d.routed)for(const r of cfg.roofs){const peak={x:r[0]+r[2]/2,y:r[1]-18},left={x:r[0]-8,y:r[1]+8},right={x:r[0]+r[2]+8,y:r[1]+8}
+    for(const [a,b] of [[peak,left],[peak,right]] as [Point,Point][]){const hit=segmentIntersection({x:d.px,y:d.py},{x:d.x,y:d.y},a,b);if(hit){const route=routeAlongSurface(hit,a,b);d.x=hit.x;d.y=hit.y-2;d.vx=route.vx;d.vy=route.vy;d.routed=.28;this.roofRoutes++;break}}if(d.routed)break}
+   for(const f of this.folds){if(f.fading||d.routed)continue;const hit=segmentIntersection({x:d.px,y:d.py},{x:d.x,y:d.y},f.a,f.b);if(hit){const route=routeAlongSurface(hit,f.a,f.b);d.x=hit.x;d.y=hit.y-2;d.vx=route.vx;d.vy=route.vy;d.routed=.28;this.foldRoutes++}}
    for(const cx of cfg.chimneys)if(d.y>485&&d.y<610&&Math.abs(d.x-cx)<11){this.steam.push({x:cx,y:d.y,life:1.4});d.age=99}
    for(let i=0;i<this.pots.length;i++){const p=this.pots[i];if(!p.bloomed&&d.py<=p.y&&d.y>=p.y&&Math.abs(d.x-p.x)<17){const next=waterPot(p);this.pots[i]=next;d.age=99;this.audio.drip();if(next.bloomed){this.score+=100;this.audio.bloom(i)}}}
-   if(d.routed&&d.vy>120)d.routed=false}
+  }
   this.drops=this.drops.filter(d=>d.y<H+30&&d.age<8);this.steam.forEach(s=>{s.life-=dt;s.y-=8*dt});this.steam=this.steam.filter(s=>s.life>0)
   if(this.emitted===RAIN_PER_NIGHT&&this.drops.length===0){this.settle+=dt;if(this.settle>1.2){if(this.pots.every(p=>p.bloomed)){this.score+=foldCapacityBonus(this.folds.filter(f=>!f.fading).length);if(this.night===7)this.finish();else this.startNight(this.night+1)}else this.startNight(this.night)}}}
  private finish(){if(this.over)return;this.complete=true;this.over=true;(globalThis as any).__gameOverUiBoxes=[{name:'final-title',x:35,y:300,w:320,h:100},{name:'restart',x:70,y:650,w:250,h:55}];this.callbacks?.onGameOver({score:this.score,phase:8})}
@@ -121,5 +136,5 @@ export class SampleGame implements GameRuntime {
   if(this.complete){c.fillStyle='rgba(5,10,24,.88)';c.fillRect(0,0,W,H);c.fillStyle=MINT;c.font='bold 26px Galmuri14';c.textAlign='center';c.fillText(this.locale==='ko'?'여덟 밤이 피었습니다':'EIGHT NIGHTS IN BLOOM',W/2,340);c.fillStyle=CORAL;c.font='46px serif';c.fillText('✦  ❀  ✦',W/2,415);c.fillStyle=SILVER;c.font='11px Galmuri11';c.fillText(this.locale==='ko'?'화면을 눌러 다시 접기':'TAP TO FOLD AGAIN',W/2,690)}
   c.restore()}
  destroy(){cancelAnimationFrame(this.raf);this.ro?.disconnect();this.audio.destroy();this.canvas?.removeEventListener('pointerdown',this.down);this.canvas?.removeEventListener('pointermove',this.move);this.canvas?.removeEventListener('pointerup',this.up);this.canvas?.remove();delete(globalThis as any).__forceGameOver}
- getDebugState():Record<string,unknown>{return{over:this.over,score:this.score,night:this.night+1,emitted:this.emitted,folds:this.folds.length,bloomed:this.pots.filter(p=>p.bloomed).length}}
+ getDebugState():Record<string,unknown>{return{over:this.over,score:this.score,night:this.night+1,emitted:this.emitted,folds:this.folds.length,bloomed:this.pots.filter(p=>p.bloomed).length,roofRoutes:this.roofRoutes,foldRoutes:this.foldRoutes}}
 }

@@ -62,3 +62,10 @@
 - 잠긴 GDD와 제작 기록만 근거로 한·영 `WHY.md`, 공개 크레딧과 제작자 일러스트 메타데이터를 작성했다.
 - `laika-base-v1`을 직접 참조한 제작자 일러스트 원본과 640px, 1280px JPEG 파생본을 만들고 해시와 사람 검수 결과를 `ART.md`와 `art/provenance/`에 기록했다.
 - 게임 규칙, 세계, 팔레트, 게임 아트와 사운드는 바꾸지 않았다.
+
+## 아케이드 공개와 지구 평가 / 2026-07-26
+
+- 불변 릴리스 `dec3d21f7b191f19c848231d81954a6cdd768d8c`의 7개 파일, 2,375,613 bytes, JavaScript gzip 74,139 bytes를 기존 Blob과 단일 아케이드에 공개했다.
+- preview, production deployment URL, 운영 주소 `https://laika365.vercel.app/play/foldtherain`에서 deployment-only 스모크가 모두 mounted=true, consoleErrors=[], pageErrors=[], failedRequests=[]로 통과했다.
+- 390×844 운영 화면에서 독립 평가자가 실제 포인터로 첫 장면을 플레이했다. 비의 움직임과 밤의 종료를 확인했지만 화분을 채우지 못해 다음 밤과 완주는 경험하지 못했다.
+- 지구 평가는 어두운 화면과 빗줄기의 결을 장점으로, 첫 입력의 대상과 실패 뒤 다시 시작할 위치를 마찰로 기록했다.

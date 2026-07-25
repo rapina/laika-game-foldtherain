@@ -2,6 +2,7 @@ import { APP_CONFIG } from '../appConfig'
 import type { GameCallbacks, GameRuntime } from './types'
 
 export const RAIN_PER_NIGHT = 72
+export const NIGHT_REQUIREMENTS = [5, 5, 6, 6, 7, 8, 8, 9] as const
 const W = APP_CONFIG.designWidth, H = APP_CONFIG.designHeight
 const PAPER = '#101a36', SILVER = '#bed3df', CORAL = '#ff806f', MINT = '#71d8b0'
 export type Point = { x:number; y:number }
@@ -29,6 +30,9 @@ export function addFold(folds:Fold[],fold:Fold):Fold[]{
 export function waterPot(pot:Pot):Pot {
     if(pot.bloomed)return pot
     const water=pot.water+1; return {...pot,water,bloomed:water>=pot.need}
+}
+export function foldCapacityBonus(activeFolds:number):number {
+    return Math.max(0, 3-activeFolds)*20
 }
 
 type Drop={x:number;y:number;px:number;py:number;vx:number;vy:number;age:number;routed:boolean}
@@ -73,7 +77,7 @@ export class SampleGame implements GameRuntime {
   ;(globalThis as any).__gameDesignSize={w:W,h:H};(globalThis as any).__forceGameOver=()=>this.finish()
   this.last=performance.now();this.raf=requestAnimationFrame(this.loop)
  }
- private startNight(index:number){this.night=index;const cfg=nights[index],need=5+Math.min(4,Math.floor(index/2))
+ private startNight(index:number){this.night=index;const cfg=nights[index],need=NIGHT_REQUIREMENTS[index]
   this.pots=cfg.pots.map((x,i)=>({x,y:cfg.roofs[i][1]-13,need,water:0,bloomed:false}));this.drops=[];this.folds=[];this.steam=[];this.emitted=0;this.emitClock=0;this.settle=0;this.message=1.7}
  private pos(e:PointerEvent):Point{const r=this.canvas.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}}
  private down=(e:PointerEvent)=>{this.audio.unlock();if(this.complete){this.complete=false;this.over=false;this.score=0;this.startNight(0);return}
@@ -96,13 +100,13 @@ export class SampleGame implements GameRuntime {
    for(let i=0;i<this.pots.length;i++){const p=this.pots[i];if(!p.bloomed&&d.py<=p.y&&d.y>=p.y&&Math.abs(d.x-p.x)<17){const next=waterPot(p);this.pots[i]=next;d.age=99;this.audio.drip();if(next.bloomed){this.score+=100;this.audio.bloom(i)}}}
    if(d.routed&&d.vy>120)d.routed=false}
   this.drops=this.drops.filter(d=>d.y<H+30&&d.age<8);this.steam.forEach(s=>{s.life-=dt;s.y-=8*dt});this.steam=this.steam.filter(s=>s.life>0)
-  if(this.emitted===RAIN_PER_NIGHT&&this.drops.length===0){this.settle+=dt;if(this.settle>1.2){if(this.pots.every(p=>p.bloomed)){if(this.night===7)this.finish();else this.startNight(this.night+1)}else this.startNight(this.night)}}}
- private finish(){if(this.over)return;this.complete=true;this.over=true;this.score+=(3-this.folds.filter(f=>!f.fading).length)*20;(globalThis as any).__gameOverUiBoxes=[{name:'final-title',x:35,y:300,w:320,h:100},{name:'restart',x:70,y:650,w:250,h:55}];this.callbacks?.onGameOver({score:this.score,phase:8})}
+  if(this.emitted===RAIN_PER_NIGHT&&this.drops.length===0){this.settle+=dt;if(this.settle>1.2){if(this.pots.every(p=>p.bloomed)){this.score+=foldCapacityBonus(this.folds.filter(f=>!f.fading).length);if(this.night===7)this.finish();else this.startNight(this.night+1)}else this.startNight(this.night)}}}
+ private finish(){if(this.over)return;this.complete=true;this.over=true;(globalThis as any).__gameOverUiBoxes=[{name:'final-title',x:35,y:300,w:320,h:100},{name:'restart',x:70,y:650,w:250,h:55}];this.callbacks?.onGameOver({score:this.score,phase:8})}
  private draw(){const c=this.ctx,cfg=nights[this.night];c.save();c.clearRect(0,0,W,H);c.fillStyle=PAPER;c.fillRect(0,0,W,H);if(this.shake>0)c.translate(Math.sin(performance.now()*.08)*5,0)
   c.globalAlpha=.08;c.strokeStyle='#dfe8ef';for(let y=0;y<H;y+=7){c.beginPath();c.moveTo(0,y+Math.sin(y)*2);c.lineTo(W,y);c.stroke()}c.globalAlpha=1
   const grad=c.createLinearGradient(0,0,0,170);grad.addColorStop(0,'#17274c');grad.addColorStop(1,PAPER);c.fillStyle=grad;c.fillRect(0,0,W,180);c.fillStyle='#25375d'
   for(let x=22;x<W;x+=55){c.beginPath();c.ellipse(x,102+(x%3)*5,52,30,0,0,Math.PI*2);c.fill()}
-  c.fillStyle=SILVER;c.font='11px Galmuri11';c.textAlign='left';c.fillText(`${this.locale==='ko'?'밤':'NIGHT'} ${this.night+1} / 8`,20,35);c.textAlign='center';c.font='bold 17px Galmuri14';c.fillText(this.locale==='ko'?'비를 접는 밤':'FOLD THE RAIN',W/2,69);c.font='10px Galmuri11';c.fillStyle='#7388a5';c.fillText(this.locale==='ko'?'빈 곳을 드래그 · 선을 탭해 펼치기':'DRAG EMPTY SPACE · TAP A FOLD',W/2,92)
+  c.fillStyle=SILVER;c.font='11px Galmuri11';c.textAlign='left';c.fillText(`${this.locale==='ko'?'밤':'NIGHT'} ${this.night+1} / 8`,20,35);c.textAlign='right';c.fillText(`${this.locale==='ko'?'점수':'SCORE'} ${this.score}`,W-20,54);c.textAlign='center';c.font='bold 17px Galmuri14';c.fillText(this.locale==='ko'?'비를 접는 밤':'FOLD THE RAIN',W/2,69);c.font='10px Galmuri11';c.fillStyle='#7388a5';c.fillText(this.locale==='ko'?'빈 곳을 드래그 · 선을 탭해 펼치기':'DRAG EMPTY SPACE · TAP A FOLD',W/2,92)
   c.fillStyle='#384866';for(let i=0;i<3;i++)c.fillRect(332+i*13,28,8,3);c.fillStyle=MINT;for(let i=0;i<3-this.folds.filter(f=>!f.fading).length;i++)c.fillRect(332+i*13,28,8,3)
   for(const r of cfg.roofs){c.fillStyle='#0a1328';c.fillRect(r[0],r[1]+8,r[2],H-r[1]);c.fillStyle='#1d2a48';c.beginPath();c.moveTo(r[0]-8,r[1]+8);c.lineTo(r[0]+r[2]/2,r[1]-18);c.lineTo(r[0]+r[2]+8,r[1]+8);c.closePath();c.fill();c.strokeStyle='#050b18';c.lineWidth=3;c.stroke();c.fillStyle='#d2a06c';for(let wx=r[0]+18;wx<r[0]+r[2]-8;wx+=34)c.fillRect(wx,r[1]+42,9,14)}
   for(const x of cfg.chimneys){c.fillStyle='#080f20';c.fillRect(x-8,485,16,73);c.strokeStyle='#3c4b67';c.strokeRect(x-8,485,16,73)}

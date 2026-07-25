@@ -34,5 +34,16 @@
 ## 결과
 
 - 상태: creator-complete
-- 게임 잠금: 2026-07-26, 위 sourceHash
+- 게임 잠금: 2026-07-26, sourceHash `8027f0ca810e2db6f41d97e78cac53239c5106eeb9c38bd2bc600ea4d9aa202b`
 - 알려진 문제: 기존 잠금 의존성 트리의 npm audit 취약점 48건은 미조치. 실제 8개 밤 전체의 사람 손 플레이 난이도와 WebAudio 음색은 자동 검증하지 않았다.
+
+## 설계 일치 보정 / 2026-07-26
+
+- 여덟째 밤의 공식 필요 물을 GDD 표와 같은 9로 결정했다. 런타임은 명시적 배열 `[5, 5, 6, 6, 7, 8, 8, 9]`를 사용한다.
+- 점수는 화분 개화당 100점과 성공한 밤의 미사용 접는 선 슬롯당 20점을 누적하며, 플레이 HUD 오른쪽 위에 항상 표시한다.
+- 최종 정원은 셸의 자동 ranking 전환과 동적 React key로 언마운트하지 않는다. 메인 셸 Chromium 검증에서 완료 후 1.2초 동안 `over=true`와 Canvas가 유지되고, 최종 장면 탭 뒤 `over=false`, `night=1`로 재시작되는 것을 확인했다. 같은 실행에서 실제 드래그가 `folds` 0→1로 바뀌고 오류가 없었다.
+- `npm test`: 3개 파일, 27개 테스트 통과. 밤별 필요량과 접는 선 여유 점수 테스트를 추가했다.
+- `npm run build`: 프로덕션 빌드 성공. 기존 Capacitor core chunk 경고 외 오류 없음.
+- `npm run viewport`: 모든 standalone/portal 기하 조합과 한·영 결과 화면 통과. `verification/viewport-result.json`을 새 sourceHash로 갱신했다.
+- `SMOKE_MODE=deployment-only npm run smoke`: mounted=true, consoleErrors=[], pageErrors=[]; `smoke-result.json` 갱신.
+- `npm run csp`: stylesheet, layout, CSP violation, 오류, 필수 자산 검사를 모두 통과했다.

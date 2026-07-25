@@ -61,14 +61,11 @@ export default function App() {
 
     const handleGameOver = useCallback((result: GameResult) => {
         setLastResult(result)
-        const plays = incrementPlayCount()
-        const every = APP_CONFIG.interstitialEveryNGames
-        if (adAdapter && every > 0 && plays % every === 0) {
-            adAdapter.showInterstitial().finally(() => setScreen('ranking'))
-            return
-        }
-        setScreen('ranking')
-    }, [adAdapter])
+        incrementPlayCount()
+        // The final garden remains mounted: its canvas tap restarts night one.
+        // Ranking stays available from the title menu instead of interrupting
+        // the game's promised final-scene interaction.
+    }, [])
 
     const openRanking = useCallback(async () => {
         if (platform?.hasNativeLeaderboard) {
@@ -97,7 +94,7 @@ export default function App() {
             case 'game':
                 return (
                     <GameScreen
-                        key={`game-${Date.now()}`}
+                        key="fold-the-rain"
                         onGameOver={handleGameOver}
                         onExit={() => setScreen('title')}
                     />

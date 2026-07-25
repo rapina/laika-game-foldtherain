@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { setLogicRandomSeed, logicRandom, getLogicRandomCallCount } from './logicRng'
-import { RAIN_PER_NIGHT, addFold, segmentHitsBlock, waterPot } from './SampleGame'
+import { RAIN_PER_NIGHT, NIGHT_REQUIREMENTS, addFold, foldCapacityBonus, segmentHitsBlock, waterPot } from './SampleGame'
 
 function drawSequence(n: number): number[] {
     return Array.from({ length: n }, () => logicRandom())
@@ -53,6 +53,10 @@ describe('Fold the Rain rules', () => {
         expect(RAIN_PER_NIGHT).toBe(72)
     })
 
+    it('uses the documented per-night pot requirements including nine on night eight', () => {
+        expect(NIGHT_REQUIREMENTS).toEqual([5, 5, 6, 6, 7, 8, 8, 9])
+    })
+
     it('rejects folds crossing a building but accepts empty space', () => {
         const building = { x: 100, y: 500, w: 120, h: 344 }
         expect(segmentHitsBlock({ x: 40, y: 600 }, { x: 300, y: 600 }, building)).toBe(true)
@@ -73,5 +77,11 @@ describe('Fold the Rain rules', () => {
         pot = waterPot(pot)
         expect(pot.bloomed).toBe(true)
         expect(waterPot(pot)).toEqual(pot)
+    })
+
+    it('awards 20 points for each unused fold slot at a successful night', () => {
+        expect(foldCapacityBonus(0)).toBe(60)
+        expect(foldCapacityBonus(2)).toBe(20)
+        expect(foldCapacityBonus(3)).toBe(0)
     })
 })
